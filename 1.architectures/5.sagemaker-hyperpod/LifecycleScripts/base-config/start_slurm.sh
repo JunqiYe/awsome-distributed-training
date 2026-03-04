@@ -12,6 +12,23 @@ CONTROLLER_IP_VALUES=($2)
 main() {
   echo "[INFO] START: Starting Slurm daemons"
 
+  # Ensure prolog/epilog scripts are executable on every node type.
+  # slurmctld (controller) validates executability at startup; slurmd
+  # (compute) must also be able to exec them when a job runs.
+  # The scripts are downloaded from the customer S3 bucket by HyperPod into
+  # /tmp/<bucket-name>/, which is the working directory this script is
+  # launched from.  Derive the path dynamically so it works regardless of
+  # the bucket name.
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  for script in "$SCRIPT_DIR/prolog.sh" "$SCRIPT_DIR/epilog.sh"; do
+      if [ -f "$script" ]; then
+          chmod +x "$script"
+          echo "[INFO] Made $script executable"
+      else
+          echo "[WARN] $script not found, skipping chmod"
+      fi
+  done
+
   if [[ $1 == "controller" ]]; then
     echo "[INFO] This is a Controller node. Start slurm controller daemon..."
 
