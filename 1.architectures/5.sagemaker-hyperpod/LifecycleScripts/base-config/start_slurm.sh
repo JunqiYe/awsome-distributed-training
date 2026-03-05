@@ -32,6 +32,14 @@ main() {
   if [[ $1 == "controller" ]]; then
     echo "[INFO] This is a Controller node. Start slurm controller daemon..."
 
+    # Inject Prolog/Epilog paths into slurm.conf before slurmctld reads it.
+    # Remove any pre-existing lines to avoid duplicates on re-runs, then append.
+    sed -i '/^Prolog=/d;/^Epilog=/d' /opt/slurm/etc/slurm.conf
+    printf '\n' >> /opt/slurm/etc/slurm.conf
+    echo "Prolog=${SCRIPT_DIR}/prolog.sh"  >> /opt/slurm/etc/slurm.conf
+    echo "Epilog=${SCRIPT_DIR}/epilog.sh"  >> /opt/slurm/etc/slurm.conf
+    echo "[INFO] Added Prolog and Epilog to /opt/slurm/etc/slurm.conf"
+
     systemctl enable --now slurmctld
 
     mv /etc/systemd/system/slurmd{,_DO_NOT_START_ON_CONTROLLER}.service \

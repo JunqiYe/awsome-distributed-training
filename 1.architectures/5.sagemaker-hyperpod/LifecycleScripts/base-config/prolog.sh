@@ -41,3 +41,8 @@ else
 fi
 
 log "Mapping directory contents: $(ls "$JOB_ID_MAP_DIR" 2>&1)"
+
+log Updating the otel collector target.json
+cat > /etc/otel/targets.json <<EOF
+[{"targets": ["localhost:9100"], "labels": {"hpc_job": "${SLURM_JOB_ID}"}},{"targets": ["localhost:9109"], "labels": {"hpc_job": "${SLURM_JOB_ID}"}}]
+EOF
